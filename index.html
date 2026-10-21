@@ -506,8 +506,8 @@ svg.chart{width:100%;height:auto;display:block;background:var(--chart-bg);border
    them in is only a transparent container -- its disclosure summary must not show */
 .map-legend-box>summary{display:none;}
 /* 2026-10-21: 범례가 지도 왼쪽 아래 지점(대평·감곡 등)을 가려 판정 색이 안 보였음 → 데스크톱에서도 지도 아래에 펼쳐 둠 */
-.map-legend-box{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0;}
-.map-legend-box>.map-legend{position:static !important;margin:0;flex:1 1 300px;background:var(--panel-2);box-shadow:none;}
+.map-legend-box{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;}
+.map-legend-box>.map-legend{position:static !important;margin:0;flex:1 1 300px;background:var(--panel-2);box-shadow:none;border-radius:10px;padding:10px 14px;}
 /* explains the deliberate one-finger-scroll / two-finger-map split; the mobile media query below
    turns it on. It must be declared HERE, before that query -- as a later same-specificity rule it
    would have overridden it and the hint would never have appeared. */
@@ -4009,7 +4009,7 @@ function drawChart(svg, opts){
   function proj(lonlat){ return worldPx(lonlat[0], lonlat[1]); }
 
   const p0 = worldPx(bbox[0], bbox[3]), p1 = worldPx(bbox[2], bbox[1]);
-  const padPx = 60;
+  const padPx = 110;   // 첫 화면에서 낙양보(아래 끝)·종야(위 끝) 마커가 테두리에 붙지 않게
   let vb = {x: p0[0]-padPx, y: p0[1]-padPx, w: (p1[0]-p0[0])+2*padPx, h: (p1[1]-p0[1])+2*padPx};
   const HOME_VB = {...vb};
   let __bmT = null;
@@ -5074,7 +5074,7 @@ function drawChart(svg, opts){
     det.className = 'map-legend-box';
     det.open = true;   // CSS closes it on narrow screens via the summary; desktop keeps it open
     det.innerHTML = '<summary>범례 보기</summary>';
-    wrap.appendChild(det);
+    wrap.after(det);   // 지도 테두리 밖(아래)에 둬서 지도 그림이 잘려 보이지 않게(2026-10-21)
     legends.forEach(l=> det.appendChild(l));
     // collapse only where the space actually matters, and only on first layout
     if((window.innerWidth||1200) <= 760) det.open = false;
