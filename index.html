@@ -505,6 +505,9 @@ svg.chart{width:100%;height:auto;display:block;background:var(--chart-bg);border
 /* desktop: the legends stay absolute overlays inside .map-wrap, so the <details> app.js wraps
    them in is only a transparent container -- its disclosure summary must not show */
 .map-legend-box>summary{display:none;}
+/* 2026-10-21: 범례가 지도 왼쪽 아래 지점(대평·감곡 등)을 가려 판정 색이 안 보였음 → 데스크톱에서도 지도 아래에 펼쳐 둠 */
+.map-legend-box{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0;}
+.map-legend-box>.map-legend{position:static !important;margin:0;flex:1 1 300px;background:var(--panel-2);box-shadow:none;}
 /* explains the deliberate one-finger-scroll / two-finger-map split; the mobile media query below
    turns it on. It must be declared HERE, before that query -- as a later same-specificity rule it
    would have overridden it and the hint would never have appeared. */
@@ -5254,7 +5257,7 @@ function drawChart(svg, opts){
         const w = worst[site.marker]; if(!w || rk[st.k] < rk[w.k]) worst[site.marker] = st;
       });
       if(active) irrEls.forEach(m=>{
-        const w = worst[m.id]; const col = w ? COL[w.k] : '#E07B1F';
+        const w = worst[m.id]; const col = w ? COL[w.k] : COL.na;   // 종야처럼 자료 없는 지점은 회색
         m.st.setAttribute('fill', col);
         const dim = onlyShort && !(w && w.k==='short');
         m.st.setAttribute('opacity', dim?'0.35':'1'); m.label.setAttribute('opacity', dim?'0.35':'1');
