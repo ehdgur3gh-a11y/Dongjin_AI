@@ -595,7 +595,11 @@ main [id],main h2,main h3,main .panel,main .subtabs{scroll-margin-top:calc(var(-
     :root[data-theme="dark"] .botnav{background:rgba(17,29,46,.97);}
   }
   @media(prefers-reduced-motion:reduce){ .botnav-lens{transition:opacity .2s;} }
-  #toTop{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:14px;}
+  #toTop{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:14px;transition:bottom .32s cubic-bezier(.2,.8,.2,1);}
+  /* hide the bar while scrolling down (more room to read), bring it back on any scroll up */
+  .botnav{transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .32s;}
+  body.botnav-hidden .botnav{transform:translateY(calc(100% + 18px + env(safe-area-inset-bottom,0px)));opacity:0;pointer-events:none;}
+  body.botnav-hidden #toTop{bottom:calc(16px + env(safe-area-inset-bottom,0px));}
   /* keep the badge pinned to the band's top-right on phones too, matching desktop (just smaller) */
 
   .botsheet{display:block;position:fixed;inset:0;z-index:96;pointer-events:none;}
@@ -10295,6 +10299,7 @@ toTopBtn.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'
     });
     Array.from(sheet.querySelectorAll('button[data-tab]')).forEach(b=>
       b.classList.toggle('on', b.dataset.tab === active));    placeLens();
+    if(window.__showBotnav) window.__showBotnav();
   }
   // slide the glass lens under whichever bottom-bar button is lit
   function placeLens(){
@@ -10305,6 +10310,26 @@ toTopBtn.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'
     lens.classList.add('ready');
   }
   window.addEventListener('resize', placeLens);
+  // hide on scroll down, show on scroll up; always shown near the top/bottom of the page,
+  // while the 더보기 sheet is open, and right after a tab change
+  let lastY = window.scrollY, acc = 0, ticking = false;
+  const setHidden = h => document.body.classList.toggle('botnav-hidden', h);
+  function onScroll(){
+    ticking = false;
+    const y = window.scrollY, dy = y - lastY; lastY = y;
+    if(sheet.classList.contains('open')){ acc = 0; return setHidden(false); }
+    const nearTop = y < 80;
+    const nearBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 40;
+    if(nearTop || nearBottom){ acc = 0; return setHidden(false); }
+    if(dy === 0) return;
+    if((acc > 0) !== (dy > 0)) acc = 0;
+    acc += dy;
+    if(acc > 24) setHidden(true);
+    else if(acc < -24) setHidden(false);
+  }
+  window.addEventListener('scroll', ()=>{ if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, {passive:true});
+  bar.addEventListener('focusin', ()=> setHidden(false));
+  window.__showBotnav = ()=>{ acc = 0; lastY = window.scrollY; setHidden(false); };
   // keep in sync when the tab is changed from anywhere else (header links, search, deep links)
   links.forEach(a=> a.addEventListener('click', syncBotnav));
   window.__syncBotnav = syncBotnav;
